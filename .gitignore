@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# VS Code
+.vscode/
+
+# Model Checkpoints & Outputs
+outputs/
+outputs_weighted/
+lora_model/
+lora_model_weighted/
+*.pt
+*.pth
+*.bin
+*.safetensors
+adapter_model.bin
+adapter_config.json
+
+# Unsloth / HuggingFace
+.cache/
+token
+*.jsonl
+
+# WandB (Weights & Biases)
+wandb/
+
+# Logs
+*.log
+
+unsloth_compiled_cache/
