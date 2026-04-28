@@ -30,8 +30,10 @@ adapter_config.json
 
 # Unsloth / HuggingFace
 .cache/
+.hf_cache/
 token
 *.jsonl
+.codex
 
 # WandB (Weights & Biases)
 wandb/

@@ -78,7 +78,7 @@ def formatting_prompts_func(examples):
         
     return { "text" : prompts }
 
-dataset = dataset.map(formatting_prompts_func, batched = True,)
+dataset = dataset.map(formatting_prompts_func, batched = True, remove_columns=dataset.column_names)
 
 # 5. Train
 trainer = SFTTrainer(

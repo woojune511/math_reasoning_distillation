@@ -3,6 +3,8 @@
 ## 📌 Overview
 This project explores methods to distill the **Reasoning Capabilities (Chain-of-Thought)** of large reasoning models (like DeepSeek-R1) into small language models (SLMs, e.g., **Qwen2.5-1.5B**).
 
+For a GPU-session execution guide, see [RUNBOOK.md](RUNBOOK.md).
+
 We focus on two key approaches:
 1.  **Standard SFT:** Fine-tuning on high-quality reasoning traces containing `<think>` tags.
 2.  **Step-Aware Loss:** A custom loss function that assigns higher weight (2.0x) to tokens within the reasoning block (`<think>...</think>`) to enforce logic learning over rote memorization.

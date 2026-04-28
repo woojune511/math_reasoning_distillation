@@ -1,6 +1,5 @@
 from unsloth import FastLanguageModel
 from transformers import TextStreamer
-import torch
 
 def demo():
     model, tokenizer = FastLanguageModel.from_pretrained(
@@ -10,6 +9,7 @@ def demo():
         load_in_4bit = True,
     )
     FastLanguageModel.for_inference(model)
+    device = next(model.parameters()).device
 
     # GSM8K Example
     question = "Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?"
@@ -23,7 +23,7 @@ def demo():
         tokenize = True,
         add_generation_prompt = True,
         return_tensors = "pt",
-    ).to("cuda")
+    ).to(device)
 
     print("Generating...")
     text_streamer = TextStreamer(tokenizer)

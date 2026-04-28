@@ -3,7 +3,6 @@ import torch
 from datasets import load_dataset
 from tqdm import tqdm
 from unsloth import FastLanguageModel
-from transformers import TextStreamer
 
 def evaluate_gsm8k(model_name, max_new_tokens=1024, load_in_4bit=True, limit=None):
     print(f"Loading model: {model_name}")
@@ -16,6 +15,7 @@ def evaluate_gsm8k(model_name, max_new_tokens=1024, load_in_4bit=True, limit=Non
         load_in_4bit = load_in_4bit,
     )
     FastLanguageModel.for_inference(model)
+    device = next(model.parameters()).device
 
     print("Loading GSM8K dataset...")
     dataset = load_dataset("gsm8k", "main", split="test")
@@ -28,8 +28,6 @@ def evaluate_gsm8k(model_name, max_new_tokens=1024, load_in_4bit=True, limit=Non
     
     correct = 0
     total = 0
-    
-    results = []
     
     for item in tqdm(dataset):
         question = item['question']
@@ -47,7 +45,7 @@ def evaluate_gsm8k(model_name, max_new_tokens=1024, load_in_4bit=True, limit=Non
             tokenize = True,
             add_generation_prompt = True,
             return_tensors = "pt",
-        ).to("cuda")
+        ).to(device)
 
         outputs = model.generate(
             input_ids = inputs, 
@@ -55,34 +53,18 @@ def evaluate_gsm8k(model_name, max_new_tokens=1024, load_in_4bit=True, limit=Non
             use_cache = True
         )
         
-        decoded_output = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        
-        # Extract response (part after system/user) - simple extraction
-        # Qwen usually handles this well. We'll look for the last assistant response.
-        # But tokenizer.decode strips roles usually if not carefully handled?
-        # Let's just assume the generation adds to the prompt.
-        
-        # Unsloth/HF generate returns input + output. 
-        # We need to slice the output.
         generated_text = tokenizer.decode(outputs[0][inputs.shape[1]:], skip_special_tokens=True)
-        
-        # Check answer
-        # GSM8K ground truth usually has the answer after ####
-        gt_value = ground_truth.split("####")[-1].strip()
-        
-        # Simple number extraction from generated text
-        # Look for the last number or #### pattern
+
+        gt_value = ground_truth.split("####")[-1].strip().replace(',', '')
+
         match = re.search(r"####\s*(-?\d+\.?\d*)", generated_text)
         if match:
             pred_value = match.group(1)
         else:
-            # Check for \boxed{...} format (common in CoT models)
             boxed_match = re.findall(r"\\boxed\{([^}]*)\}", generated_text)
             if boxed_match:
-                # Take the last boxed value
                 pred_value = boxed_match[-1].strip()
             else:
-                # Fallback: extract last number
                 numbers = re.findall(r"-?\d+\.?\d*", generated_text.replace(',', ''))
                 pred_value = numbers[-1] if numbers else ""
             
@@ -91,16 +73,8 @@ def evaluate_gsm8k(model_name, max_new_tokens=1024, load_in_4bit=True, limit=Non
             correct += 1
         total += 1
         
-        results.append({
-            "question": question,
-            "generated": generated_text,
-            "ground_truth": gt_value,
-            "prediction": pred_value,
-            "correct": is_correct
-        })
-        
         if total % 10 == 0:
-            print(f"Propcessed {total}: Current Acc: {correct/total:.2%}")
+            print(f"Processed {total}: Current Acc: {correct/total:.2%}")
 
     accuracy = correct / total
     print(f"Final Accuracy: {accuracy:.2%}")
